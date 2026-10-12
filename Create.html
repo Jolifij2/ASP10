@@ -1,0 +1,54 @@
+@model RecipesApp.Models.Recipe
+
+@{
+    ViewData["Title"] = "Добавить рецепт";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Добавить рецепт</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Cuisine" class="form-label"></label>
+                    <input asp-for="Cuisine" class="form-control" />
+                    <span asp-validation-for="Cuisine" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CookingTime" class="form-label"></label>
+                    <input asp-for="CookingTime" class="form-control" type="number" />
+                    <span asp-validation-for="CookingTime" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Difficulty" class="form-label"></label>
+                    <input asp-for="Difficulty" class="form-control" type="number" min="1" max="5" />
+                    <span asp-validation-for="Difficulty" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
