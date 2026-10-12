@@ -1,0 +1,22 @@
+@model RecipesApp.Models.Recipe
+
+@{
+    ViewData["Title"] = "Детали рецепта";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@Model.Name</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>Кухня:</strong> @Model.Cuisine</p>
+            <p><strong>Время приготовления:</strong> @Model.CookingTime мин.</p>
+            <p><strong>Сложность:</strong> @Model.Difficulty / 5</p>
+            <p><strong>Описание:</strong> @Model.Description</p>
+        </div>
+        <div class="card-footer bg-white border-0">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Редактировать</a>
+            <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+        </div>
+    </div>
+</div>
