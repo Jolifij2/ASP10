@@ -1,0 +1,195 @@
+@model IEnumerable<RecipesApp.Models.Recipe>
+
+@{
+    ViewData["Title"] = "Рецепты";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">Список рецептов</h1>
+
+    @Html.AntiForgeryToken()
+
+    <div class="d-flex justify-content-between mb-3">
+        <a asp-action="Create" class="btn btn-primary">Добавить рецепт</a>
+        <div class="d-flex" style="gap: 10px;">
+            <input type="text" id="searchQuery" class="form-control" placeholder="Поиск по названию или кухне..." style="width: 300px;" />
+            <button id="btnSearch" class="btn btn-outline-secondary">Найти</button>
+        </div>
+    </div>
+
+    <div id="message" style="display:none; padding: 10px; border-radius: 5px; margin-bottom: 15px;"></div>
+
+    <!-- Карточки -->
+    <div class="row" id="recipesCards">
+        @foreach (var recipe in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <span class="badge bg-primary mb-2">@recipe.Cuisine</span>
+                        <h5 class="card-title">@recipe.Name</h5>
+                        <p class="card-text text-muted">@recipe.Description</p>
+
+                        <p class="mb-1"><strong>Сложность:</strong> @recipe.Difficulty / 5</p>
+                        <div class="progress mb-3">
+                            @{ var difficultyPercent = recipe.Difficulty * 20; }
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                 style="width: @difficultyPercent%"
+                                 aria-valuenow="@difficultyPercent" aria-valuemin="0" aria-valuemax="100">
+                                @recipe.Difficulty
+                            </div>
+                        </div>
+
+                        <p class="card-text"><small class="text-muted">Время: @recipe.CookingTime мин.</small></p>
+                    </div>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@recipe.Id" class="btn btn-sm btn-outline-info">Детали</a>
+                        <a asp-action="Edit" asp-route-id="@recipe.Id" class="btn btn-sm btn-outline-warning">Редактировать</a>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="@recipe.Id">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Таблица -->
+    <h2 class="mt-5 mb-3">Все рецепты</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Кухня</th>
+                    <th>Время (мин)</th>
+                    <th>Сложность</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="recipesTableBody">
+                @foreach (var recipe in Model)
+                {
+                    <tr>
+                        <td>@recipe.Id</td>
+                        <td>@recipe.Name</td>
+                        <td><span class="badge bg-secondary">@recipe.Cuisine</span></td>
+                        <td>@recipe.CookingTime</td>
+                        <td>@recipe.Difficulty / 5</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@recipe.Id" class="btn btn-sm btn-outline-warning">Изменить</a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="@recipe.Id">Удалить</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getToken() {
+            return $('input[name="__RequestVerificationToken"]').val();
+        }
+
+        function showMessage(text, isSuccess) {
+            $('#message').text(text)
+                .css('background', isSuccess ? '#d4edda' : '#f8d7da')
+                .css('color', isSuccess ? '#155724' : '#721c24')
+                .css('padding', '10px')
+                .css('border-radius', '5px')
+                .show();
+            setTimeout(() => $('#message').hide(), 3000);
+        }
+
+        // AJAX-удаление
+        $(document).on('click', '.btn-delete', function () {
+            if (!confirm('Удалить этот рецепт?')) return;
+
+            const id = $(this).data('id');
+            const button = $(this);
+
+            $.ajax({
+                url: '/Recipes/DeleteAjax',
+                type: 'POST',
+                data: { id: id },
+                headers: { 'RequestVerificationToken': getToken() },
+                success: function (response) {
+                    showMessage(response.message, true);
+                    // Удаляем карточку и строку из DOM
+                    button.closest('.col-md-6').remove();
+                    button.closest('tr').remove();
+                },
+                error: function () {
+                    showMessage('Ошибка удаления', false);
+                }
+            });
+        });
+
+        // AJAX-поиск
+        $('#btnSearch').click(function () {
+            const query = $('#searchQuery').val();
+            $.ajax({
+                url: '/Recipes/Search?query=' + encodeURIComponent(query),
+                type: 'GET',
+                success: function (data) {
+                    renderRecipes(data);
+                },
+                error: function () {
+                    showMessage('Ошибка поиска', false);
+                }
+            });
+        });
+
+        $('#searchQuery').on('keyup', function (e) {
+            if (e.key === 'Enter') $('#btnSearch').click();
+        });
+
+        function renderRecipes(data) {
+            // Перерисовка карточек
+            let cardsHtml = '';
+            data.forEach(function (recipe) {
+                const difficultyPercent = recipe.difficulty * 20;
+                cardsHtml += `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <span class="badge bg-primary mb-2">${recipe.cuisine}</span>
+                                <h5 class="card-title">${recipe.name}</h5>
+                                <p class="card-text text-muted">${recipe.description || ''}</p>
+                                <p class="mb-1"><strong>Сложность:</strong> ${recipe.difficulty} / 5</p>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar bg-warning" style="width: ${difficultyPercent}%">${recipe.difficulty}</div>
+                                </div>
+                                <p class="card-text"><small class="text-muted">Время: ${recipe.cookingTime} мин.</small></p>
+                            </div>
+                            <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                                <a href="/Recipes/Details/${recipe.id}" class="btn btn-sm btn-outline-info">Детали</a>
+                                <a href="/Recipes/Edit/${recipe.id}" class="btn btn-sm btn-outline-warning">Редактировать</a>
+                                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${recipe.id}">Удалить</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            $('#recipesCards').html(cardsHtml);
+
+            // Перерисовка таблицы
+            let tableHtml = '';
+            data.forEach(function (recipe) {
+                tableHtml += `
+                    <tr>
+                        <td>${recipe.id}</td>
+                        <td>${recipe.name}</td>
+                        <td><span class="badge bg-secondary">${recipe.cuisine}</span></td>
+                        <td>${recipe.cookingTime}</td>
+                        <td>${recipe.difficulty} / 5</td>
+                        <td>
+                            <a href="/Recipes/Edit/${recipe.id}" class="btn btn-sm btn-outline-warning">Изменить</a>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${recipe.id}">Удалить</button>
+                        </td>
+                    </tr>`;
+            });
+            $('#recipesTableBody').html(tableHtml);
+        }
+    </script>
+}
