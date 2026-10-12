@@ -1,0 +1,26 @@
+@model RecipesApp.Models.Recipe
+
+@{
+    ViewData["Title"] = "Удалить рецепт";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-danger">Удалить рецепт</h1>
+    <h3>Вы уверены, что хотите удалить этот рецепт?</h3>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <p><strong>Название:</strong> @Model.Name</p>
+            <p><strong>Кухня:</strong> @Model.Cuisine</p>
+            <p><strong>Время:</strong> @Model.CookingTime мин.</p>
+            <p><strong>Сложность:</strong> @Model.Difficulty / 5</p>
+            <p><strong>Описание:</strong> @Model.Description</p>
+        </div>
+    </div>
+
+    <form asp-action="Delete" class="mt-3">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </form>
+</div>
